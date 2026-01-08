@@ -17,7 +17,7 @@ public class Main {
         AuthService auth = new AuthService();
 
         while (true) {
-            System.out.println("\n=== LOGIN ===");
+            System.out.println("\n==products= LOGIN ===");
             System.out.print("Username: ");
             String username = sc.nextLine();
             System.out.print("Password: ");
