@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS customers (
                                          name TEXT NOT NULL,
                                          phone TEXT,
                                          email TEXT
+                                         points INTEGER DEFAULT 0
 );
 
 -- =========================

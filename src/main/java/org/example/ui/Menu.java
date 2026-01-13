@@ -64,17 +64,48 @@ public class Menu {
 
     private static void cashierMenu(User user) {
         Scanner sc = new Scanner(System.in);
+        // Load our Service
+        org.example.service.CashierService cashierService = new org.example.service.CashierService();
+
         while (true) {
             System.out.println("\n=== CASHIER MENU (" + user.getUsername() + ") ===");
-            System.out.println("1) New invoice");
-            System.out.println("2) Take payment");
+            System.out.println("1) 🏁 Start Shift (Open Register)");
+            System.out.println("2) 🛒 New Sale");
+            System.out.println("3) 🤖 Run Simulation (Threads/Concurrency)");
+            System.out.println("4) 🏁 End Shift (Close Register)");
             System.out.println("0) Logout");
             System.out.print("Choose: ");
             String choice = sc.nextLine();
 
             switch (choice) {
-                case "1" -> System.out.println("TODO: new invoice");
-                case "2" -> System.out.println("TODO: take payment");
+                case "1" -> {
+                    double amount = readDouble(sc, "Enter opening cash amount: ");
+                    cashierService.startShift(user.getId(), amount);
+                }
+                case "2" -> {
+                    // Manual Sale
+                    java.util.Map<Integer, Integer> cart = new java.util.HashMap<>();
+
+                    // Optional: Ask for Customer ID (Requirement from your image)
+                    int customerId = readInt(sc, "Customer ID (0 for Guest): ");
+
+                    while (true) {
+                        int pId = readInt(sc, "Product ID to add (0 to finish): ");
+                        if (pId == 0) break;
+                        int qty = readInt(sc, "Quantity: ");
+                        cart.put(pId, qty);
+                    }
+                    if (!cart.isEmpty()) {
+                        cashierService.processTransaction(user.getId(), customerId, cart);
+                    }
+                }
+                case "3" -> {
+                    // Triggers the Robots
+                    org.example.service.StoreSimulation.startSimulation(user.getId(), cashierService);
+                }
+                case "4" -> {
+                    cashierService.endShift(user.getId());
+                }
                 case "0" -> { return; }
                 default -> System.out.println("Invalid choice");
             }
