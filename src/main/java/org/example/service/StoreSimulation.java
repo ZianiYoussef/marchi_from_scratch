@@ -7,47 +7,59 @@ import java.util.concurrent.Semaphore;
 
 public class StoreSimulation {
 
-    // SEMAPHORE: Imagine a turnstile.
-    // "1" means only 1 person can pass the counter at a time.
+    // SEMAPHORE: Only 1 robot can be at the checkout counter at a time.
     private static final Semaphore checkoutQueue = new Semaphore(1);
 
+    // Robot Names for fun
+    private static final String[] BOT_NAMES = {"🤖 T-800", "🤖 R2-D2", "🤖 Wall-E", "🤖 Optimus", "🤖 Megatron"};
+
     public static void startSimulation(int cashierId, CashierService cashierService) {
-        System.out.println("\n=== 🤖 STARTING THREAD SIMULATION ===");
-        System.out.println("Scenario: 5 clients rushing to buy Product #1...");
+        System.out.println("\n=== ⚡ STARTING CHAOS MODE (Random Shopping) ⚡ ===");
 
-        int productEverybodyWants = 1; // Make sure Product ID 1 exists in DB!
-
-        // Create 5 Threads (Robots)
-        for (int i = 1; i <= 5; i++) {
-            final int clientNum = i;
+        // We launch 5 Threads (one for each bot name)
+        for (String botName : BOT_NAMES) {
 
             Thread t = new Thread(() -> {
                 try {
-                    System.out.println("Client " + clientNum + " is shopping...");
-                    Thread.sleep(new Random().nextInt(500)); // Random waiting time
+                    // 1. Simulate "Shopping Time" (Random sleep 0-2 seconds)
+                    Random rand = new Random();
+                    System.out.println(botName + " is browsing the aisles...");
+                    Thread.sleep(rand.nextInt(2000));
 
-                    // ACQUIRE: Ask permission to enter the checkout
-                    checkoutQueue.acquire();
-                    System.out.println("🔹 Client " + clientNum + " is at the counter.");
-
-                    // Build their cart
+                    // 2. Build a Random Cart
+                    // They pick 1 to 3 different products
                     Map<Integer, Integer> cart = new HashMap<>();
-                    cart.put(productEverybodyWants, 5); // They want 5 items
+                    int numberOfItems = rand.nextInt(3) + 1;
 
-                    // Try to pay
-                    // We pass '0' as customerId (Guest)
-                    boolean success = cashierService.processTransaction(cashierId, 0, cart);
+                    for (int j = 0; j < numberOfItems; j++) {
+                        // Random Product ID between 1 and 5 (Milk, Bread, etc.)
+                        int prodId = rand.nextInt(5) + 1;
+                        // Random Quantity between 1 and 4
+                        int qty = rand.nextInt(4) + 1;
+
+                        cart.put(prodId, qty);
+                    }
+
+                    // 3. Get in line (Acquire Lock)
+                    System.out.println(botName + " is getting in line...");
+                    checkoutQueue.acquire();
+
+                    System.out.println("🔹 " + botName + " reached the counter.");
+
+                    // 4. Pay (We give them $5000 cash so they always have enough)
+                    // We use Customer ID 0 (Guest)
+                    boolean success = cashierService.processTransaction(cashierId, 0, cart, 5000.0);
 
                     if (success) {
-                        System.out.println("😃 Client " + clientNum + " got their items!");
+                        System.out.println("😃 " + botName + " leaves happy with groceries.");
                     } else {
-                        System.out.println("😡 Client " + clientNum + " leaves angry (Out of Stock).");
+                        System.out.println("😡 " + botName + " leaves angry (Issue at checkout).");
                     }
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
-                    // RELEASE: Leave the counter
+                    // 5. Leave the counter (Release Lock) so the next robot enters
                     checkoutQueue.release();
                 }
             });

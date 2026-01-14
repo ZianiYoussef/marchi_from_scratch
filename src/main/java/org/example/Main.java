@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.db.CustomerSeeder;
 import org.example.db.SchemaInitializer;
 import org.example.db.UserSeeder;
 import org.example.model.User;
@@ -12,6 +13,7 @@ public class Main {
     public static void main(String[] args) {
         SchemaInitializer.init();
         UserSeeder.seedDefaultAdmin();
+        org.example.db.CustomerSeeder.seed();
 
         Scanner sc = new Scanner(System.in);
         AuthService auth = new AuthService();
