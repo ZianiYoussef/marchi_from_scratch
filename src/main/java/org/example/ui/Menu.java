@@ -1,17 +1,21 @@
+// src/main/java/org/example/ui/Menu.java
 package org.example.ui;
 
 import org.example.model.User;
+import org.example.service.CategoryService;
 import org.example.service.StockManagerService;
+import org.example.service.SupplierService;
 import org.example.service.UserService;
 
 import java.util.Scanner;
-
+import java.util.concurrent.CompletableFuture;
+import java.util.List;
 public class Menu {
 
     public static void show(User user) {
         switch (user.getRole()) {
             case "ADMIN" -> adminMenu(user);
-            case "CASHIER" -> cashierMenu(user);
+            case "CASIER" -> cashierMenu(user);
             case "STOCK_MANAGER" -> stockMenu(user);
             default -> System.out.println("Unknown role: " + user.getRole());
         }
@@ -20,11 +24,20 @@ public class Menu {
     private static void adminMenu(User user) {
         Scanner sc = new Scanner(System.in);
         UserService userService = new UserService();
+        CategoryService categoryService = new CategoryService();
+        SupplierService supplierService = new SupplierService();
 
         while (true) {
             System.out.println("\n=== ADMIN MENU (" + user.getUsername() + ") ===");
             System.out.println("1) Create user");
             System.out.println("2) List users");
+            System.out.println("3) Add category");
+            System.out.println("4) List categories");
+            System.out.println("5) Search categories");
+            System.out.println("6) Add supplier");
+            System.out.println("7) List suppliers");
+            System.out.println("8) Search suppliers");
+            System.out.println("9) List suppliers with email");
             System.out.println("0) Logout");
             System.out.print("Choose: ");
             String choice = sc.nextLine();
@@ -55,6 +68,101 @@ public class Menu {
                     );
                 }
 
+                case "3" -> {
+                    System.out.print("Category name: ");
+                    String categoryName = sc.nextLine();
+
+                    // Using Thread (async) - show processing message
+                    System.out.println("⏳ Processing category creation...");
+                    CompletableFuture<Boolean> future = categoryService.addCategoryAsync(categoryName);
+
+                    // Wait for completion and show result
+                    future.thenAccept(success -> {
+                        if (success) {
+                            System.out.println("✅ Category creation completed!");
+                        }
+                    }).join(); // Wait for async operation to complete
+                }
+
+                case "4" -> {
+                    System.out.println("\n--- CATEGORIES LIST ---");
+                    categoryService.getAllCategories().forEach(category ->
+                            System.out.println(category.toString())
+                    );
+                }
+
+                case "5" -> {
+                    System.out.print("Search term: ");
+                    String searchTerm = sc.nextLine();
+
+                    // Using Stream and Filter
+                    System.out.println("\n--- SEARCH RESULTS ---");
+                    List<org.example.model.Category> results = categoryService.filterCategoriesByName(searchTerm);
+
+                    if (results.isEmpty()) {
+                        System.out.println("No categories found matching: " + searchTerm);
+                    } else {
+                        results.forEach(category -> System.out.println(category.toString()));
+                    }
+                }
+
+                case "6" -> {
+                    System.out.print("Supplier name: ");
+                    String supplierName = sc.nextLine();
+
+                    System.out.print("Phone (optional, press Enter to skip): ");
+                    String phone = sc.nextLine();
+                    if (phone.trim().isEmpty()) phone = null;
+
+                    System.out.print("Email (optional, press Enter to skip): ");
+                    String email = sc.nextLine();
+                    if (email.trim().isEmpty()) email = null;
+
+                    // Using Thread (async)
+                    System.out.println("⏳ Processing supplier creation...");
+                    CompletableFuture<Boolean> future = supplierService.addSupplierAsync(supplierName, phone, email);
+
+                    future.thenAccept(success -> {
+                        if (success) {
+                            System.out.println("✅ Supplier creation completed!");
+                        }
+                    }).join();
+                }
+
+                case "7" -> {
+                    System.out.println("\n--- SUPPLIERS LIST ---");
+                    supplierService.getAllSuppliers().forEach(supplier ->
+                            System.out.println(supplier.toString())
+                    );
+                }
+
+                case "8" -> {
+                    System.out.print("Search term: ");
+                    String searchTerm = sc.nextLine();
+
+                    // Using Stream and Filter
+                    System.out.println("\n--- SEARCH RESULTS ---");
+                    List<org.example.model.Supplier> results = supplierService.filterSuppliersByName(searchTerm);
+
+                    if (results.isEmpty()) {
+                        System.out.println("No suppliers found matching: " + searchTerm);
+                    } else {
+                        results.forEach(supplier -> System.out.println(supplier.toString()));
+                    }
+                }
+
+                case "9" -> {
+                    // Using Stream and Filter to show only suppliers with email
+                    System.out.println("\n--- SUPPLIERS WITH EMAIL ---");
+                    List<org.example.model.Supplier> suppliersWithEmail = supplierService.filterSuppliersWithEmail();
+
+                    if (suppliersWithEmail.isEmpty()) {
+                        System.out.println("No suppliers with email found.");
+                    } else {
+                        suppliersWithEmail.forEach(supplier -> System.out.println(supplier.toString()));
+                    }
+                }
+
                 case "0" -> { return; }
 
                 default -> System.out.println("❌ Invalid choice");
@@ -62,6 +170,7 @@ public class Menu {
         }
     }
 
+    // ... rest of the methods (cashierMenu, stockMenu, readInt, readDouble) remain the same ...
     private static void cashierMenu(User user) {
         Scanner sc = new Scanner(System.in);
         org.example.service.CashierService cashierService = new org.example.service.CashierService();
@@ -219,8 +328,6 @@ public class Menu {
                     String q = sc.nextLine();
                     stockService.checkStock(q);
                 }
-
-
 
                 case "0" -> {
                     return;
